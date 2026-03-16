@@ -26,7 +26,7 @@ st.set_page_config(page_title="Academicians 2017", layout="wide")
 
 # This is your "Marquee" and Custom Colors
 st.markdown("""
-    <style>
+<style>
 .marquee {
 background-color: #1E3A8A;
 color: white;
