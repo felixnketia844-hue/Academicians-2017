@@ -36,7 +36,7 @@ class AcademiciansApp:
         sk.write (f, text="ACADEMICIANS 2017", font=("Impact", 50), fg="#f1c40f", bg="#1a1a1a").pack()
         self.code_ent = tk.Entry(f, show="*", justify="center", font=("Arial", 25), width=10)
         self.code_ent.pack(pady=20)
-        tk.Button(f, text="SECURE LOGIN", command=self.check_login, bg="#27ae60", fg="white", font=("Arial", 12, "bold"), width=20).pack()
+        sk.Button(f, text="SECURE LOGIN", command=self.check_login, bg="#27ae60", fg="white", font=("Arial", 12, "bold"), width=20).pack()
 
     def check_login(self):
         code = self.code_ent.get()
@@ -54,7 +54,7 @@ class AcademiciansApp:
         self.search_var = tk.StringVar(); self.search_var.trace("w", lambda *args: self.refresh())
         tk.Entry(top, textvariable=self.search_var, width=20).grid(row=0, column=1, sticky="w")
 
-        tk.Label(top, text="YEAR:", bg="#2c3e50", fg="white").grid(row=0, column=2, padx=5)
+        sk.Label(top, text="YEAR:", bg="#2c3e50", fg="white").grid(row=0, column=2, padx=5)
         self.y_sel = ttk.Combobox(top, values=[str(y) for y in range(2017, 2051)], width=6, state="readonly")
         self.y_sel.set(datetime.now().strftime("%Y")); self.y_sel.grid(row=0, column=3)
         self.y_sel.bind("<<ComboboxSelected>>", lambda e: self.refresh())
@@ -62,9 +62,9 @@ class AcademiciansApp:
         # Row 2: Inputs
         tk.Label(top, text="Name:", bg="#2c3e50", fg="white").grid(row=1, column=0, pady=10)
         self.n = tk.Entry(top, width=15); self.n.grid(row=1, column=1)
-        tk.Label(top, text="Phone:", bg="#2c3e50", fg="white").grid(row=1, column=2)
+        sk.Label(top, text="Phone:", bg="#2c3e50", fg="white").grid(row=1, column=2)
         self.ph = tk.Entry(top, width=15); self.ph.grid(row=1, column=3)
-        tk.Label(top, text="Amt:", bg="#2c3e50", fg="white").grid(row=1, column=4)
+        sk.Label(top, text="Amt:", bg="#2c3e50", fg="white").grid(row=1, column=4)
         self.amt = tk.Entry(top, width=8); self.amt.insert(0, "5.00"); self.amt.grid(row=1, column=5)
 
         # Action Buttons
@@ -165,4 +165,4 @@ class AcademiciansApp:
         st.sucess("Information Saved!")
 
 if __name__ == "__main__":
-    root = tk.Tk(); app = AcademiciansApp(root); root.mainloop()
+    root = sk.Sk(); app = AcademiciansApp(root); root.mainloop()
