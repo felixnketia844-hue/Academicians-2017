@@ -162,7 +162,6 @@ class AcademiciansApp:
         
         with open("WhatsApp_Report.txt", "w", encoding="utf-8") as f: f.write(report)
         os.startfile("WhatsApp_Report.txt")
-        st.sucess("Information Saved!")
+        st.success("Information Saved!")
 
-if __name__ == "__main__":
-    root = sk.Sk(); app = AcademiciansApp(root); root.mainloop()
+main()
