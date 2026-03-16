@@ -4,8 +4,8 @@ Created on Mon Mar 16 18:31:12 2026
 
 @author: felix
 """  
-import tkinter as tk
-from tkinter import messagebox, ttk, simpledialog
+import streamlit as st
+import streamlit as st
 import json
 import os
 from datetime import datetime
@@ -17,7 +17,7 @@ def initialize_files():
 class AcademiciansApp:
     def __init__(self, root):
         self.root = root
-        self.root.title("ACADEMICIANS 2017 - Official Ledger")
+        st.tittle("ACADEMECIANLS 2017-Official ledger")
         self.root.geometry("1400x800")
         self.root.configure(bg="#1a1a1a")
         
@@ -33,7 +33,7 @@ class AcademiciansApp:
         for widget in self.root.winfo_children(): widget.destroy()
         f = tk.Frame(self.root, bg="#1a1a1a")
         f.place(relx=0.5, rely=0.5, anchor="center")
-        tk.Label(f, text="ACADEMICIANS 2017", font=("Impact", 50), fg="#f1c40f", bg="#1a1a1a").pack()
+        sk.write (f, text="ACADEMICIANS 2017", font=("Impact", 50), fg="#f1c40f", bg="#1a1a1a").pack()
         self.code_ent = tk.Entry(f, show="*", justify="center", font=("Arial", 25), width=10)
         self.code_ent.pack(pady=20)
         tk.Button(f, text="SECURE LOGIN", command=self.check_login, bg="#27ae60", fg="white", font=("Arial", 12, "bold"), width=20).pack()
@@ -162,7 +162,7 @@ class AcademiciansApp:
         
         with open("WhatsApp_Report.txt", "w", encoding="utf-8") as f: f.write(report)
         os.startfile("WhatsApp_Report.txt")
-        messagebox.showinfo("WhatsApp Ready", "Report opened in Notepad. Copy and paste to WhatsApp!")
+        st.sucess("Information Saved!")
 
 if __name__ == "__main__":
     root = tk.Tk(); app = AcademiciansApp(root); root.mainloop()
