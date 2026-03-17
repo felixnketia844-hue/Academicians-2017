@@ -20,7 +20,7 @@ def save_data(data):
     with open('members_data.json', 'w') as f:
         json.dump(data, f, indent=4)
 
-# --- LOGIN BUTTON ---
+# --- LOGIN BUTTON ONLY ---
 if 'logged_in' not in st.session_state:
     st.session_state.logged_in = False
 
@@ -35,10 +35,10 @@ def logout():
 # --- PAGE CONFIG ---
 st.set_page_config(page_title="Academicians 2017", layout="wide")
 
-# --- LOGIN SCREEN WITH BUTTON ONLY ---
+# --- LOGIN SCREEN ---
 if not st.session_state.logged_in:
-    st.title("🔒 Click Login to Enter")
-    if st.button("Login"):
+    st.title("🔒 Login")
+    if st.button("Login to Ledger"):
         login()
     st.stop()
 
@@ -101,7 +101,7 @@ target_month = st.sidebar.selectbox(
      "July","August","September","October","November","December"]
 )
 
-# --- ADD MEMBER ---
+# --- ADD NEW MEMBER ---
 with st.sidebar.expander("➕ Add New Member"):
     new_name = st.text_input("Full Name")
     new_phone = st.text_input("Phone")
@@ -116,7 +116,7 @@ with st.sidebar.expander("➕ Add New Member"):
         else:
             st.error("Name is required!")
 
-# --- MAIN INTERFACE ---
+# --- MAIN LEDGER ---
 st.title(f"📊 Ledger: {target_month} {target_year}")
 
 if target_year in data and data[target_year]:
@@ -148,7 +148,7 @@ if target_year in data and data[target_year]:
             c1.write(f"{gender_icon} **{name}**\n({info['phone']})")
             c2.write(f"GHS {paid:.2f}")
 
-            # Payment input
+            # --- CUSTOM PAYMENT ---
             amount = c3.number_input("Amount", min_value=0.0, key=f"amt_{name}")
             if c3.button("💳 Pay", key=f"pay_{name}"):
                 if amount>0:
