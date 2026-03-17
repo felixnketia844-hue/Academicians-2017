@@ -24,81 +24,70 @@ def save_data(data):
 # --- THEME & STYLING ---
 st.set_page_config(page_title="Academicians 2017", layout="wide")
 
-# This is your "Marquee" and Custom Colors
 st.markdown("""
 <style>
 .marquee {
 background-color: #1E3A8A;
 color: white;
-padding: 10px;
+padding: 15px;
 font-weight: bold;
-border-radius: 5px;
+border-radius: 10px;
 text-align: center;
+font-size: 20px;
 }
 .stButton>button {
 background-color: #F59E0B;
 color: white;
 border-radius: 10px;
-border: none;
+font-weight: bold;
+width: 100%;
 }
 </style>
 <div class="marquee">
 ✨ WELCOME TO ACADEMICIANS 2017 OFFICIAL LEDGER PORTAL ✨
 </div>
 """, unsafe_allow_html=True)
-st.title("🎓 ACADEMICIANS 2017")
-st.write("---")
+
+st.title("🎓 Member Ledger")
 
 data = load_data()
 
 # --- SIDEBAR: ADD MEMBER ---
-st.sidebar.markdown("### 👤 Add New Member")
-new_name = st.sidebar.text_input("Full Name")
-new_phone = st.sidebar.text_input("Phone Number")
-if st.sidebar.button("➕ Add Member"):
+st.sidebar.header("👤 Register Member")
+new_name = st.sidebar.text_input("Name")
+new_phone = st.sidebar.text_input("Phone")
+if st.sidebar.button("Add to System"):
     current_year = str(datetime.now().year)
     if current_year not in data:
         data[current_year] = {}
-    
-    if new_name and new_name not in data[current_year]:
+    if new_name:
         data[current_year][new_name] = {"phone": new_phone, "payments": []}
         save_data(data)
-        st.sidebar.success(f"✅ {new_name} added!")
+        st.sidebar.success("Member Added!")
         st.rerun()
 
-# --- MAIN PAGE: VIEW & PAY ---
+# --- MAIN PAGE ---
 years = list(data.keys())
 if years:
-    selected_year = st.selectbox("📅 Select Financial Year", years)
-    
-    st.subheader(f"Records for {selected_year}")
+    selected_year = st.selectbox("Select Year", years)
     members = data[selected_year]
     
     for name, info in members.items():
-        total_paid = sum([p['amount'] for p in info.get('payments', [])])
-        
-        # Creating a nice "Card" look for each person
-        with st.container():
-            col1, col2, col3 = st.columns([2, 1, 1])
-            col1.markdown(f"**{name}** \n📞 {info['phone']}")
-            col2.markdown(f"💰 Total Paid: **GHS {total_paid:.2f}**")
-            
-            if col3.button(f"Pay GHS 50", key=name):
-                info['payments'].append({"amount": 50, "date": str(datetime.now())})
-                save_data(data)
-                st.balloons()
-                st.success(f"Payment recorded for {name}!")
-                st.rerun()
-            st.write("---")
+        paid = sum([p['amount'] for p in info.get('payments', [])])
+        col1, col2, col3 = st.columns([2, 1, 1])
+        col1.write(f"**{name}**")
+        col2.write(f"GHS {paid:.2f}")
+        if col3.button(f"Pay 50", key=name):
+            info['payments'].append({"amount": 50, "date": str(datetime.now())})
+            save_data(data)
+            st.balloons()
+            st.rerun()
 
-    # --- WHATSAPP REPORT ---
     if st.button("📱 Generate WhatsApp Report"):
-        report = f"*ACADEMICIANS 2017 FINANCIAL REPORT ({selected_year})*\n"
-        report += "----------------------------------\n"
-        for name, info in members.items():
-            paid = sum([p['amount'] for p in info.get('payments', [])])
-            report += f"• {name}: GHS {paid:.2f}\n"
-        
-        st.text_area("Copy and Paste to WhatsApp:", value=report, height=200)
+        report = f"*ACADEMICIANS 2017 ({selected_year})*\n"
+        for n, i in members.items():
+            p = sum([pm['amount'] for pm in i.get('payments', [])])
+            report += f"• {n}: GHS {p}\n"
+        st.text_area("Copy this:", value=report)
 else:
-    st.info("No records found. Add your first member in the sidebar!")
+    st.info("Start by adding a member in the sidebar!")
