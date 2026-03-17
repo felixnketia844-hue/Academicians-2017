@@ -20,17 +20,13 @@ def save_data(data):
     with open('members_data.json', 'w') as f:
         json.dump(data, f, indent=4)
 
-# --- LOGIN LOGIC ---
+# --- LOGIN BUTTON ---
 if 'logged_in' not in st.session_state:
     st.session_state.logged_in = False
 
-def login(user, password):
-    # simple example, you can expand
-    if user == "admin" and password == "1234":
-        st.session_state.logged_in = True
-        st.experimental_rerun()
-    else:
-        st.error("Wrong username or password")
+def login():
+    st.session_state.logged_in = True
+    st.experimental_rerun()
 
 def logout():
     st.session_state.logged_in = False
@@ -39,13 +35,11 @@ def logout():
 # --- PAGE CONFIG ---
 st.set_page_config(page_title="Academicians 2017", layout="wide")
 
-# --- LOGIN SCREEN ---
+# --- LOGIN SCREEN WITH BUTTON ONLY ---
 if not st.session_state.logged_in:
-    st.title("🔒 Login")
-    username = st.text_input("Username")
-    password = st.text_input("Password", type="password")
+    st.title("🔒 Click Login to Enter")
     if st.button("Login"):
-        login(username, password)
+        login()
     st.stop()
 
 # --- MARQUEE HEADER ---
@@ -95,7 +89,7 @@ data = load_data()
 
 # --- SIDEBAR ---
 st.sidebar.header("🚪 Session")
-if st.sidebar.button("Logout of System"):
+if st.sidebar.button("Logout"):
     logout()
 
 st.sidebar.divider()
@@ -134,7 +128,7 @@ if target_year in data and data[target_year]:
     females = len([n for n,i in members.items() if i.get('gender')=="Female"])
     st.write(f"👥 **Stats:** {males} Males | {females} Females")
 
-    # Table Header
+    # Table header
     col1,col2,col3,col4 = st.columns([2,1,1,1])
     col1.write("**Member Detail**")
     col2.write("**Total Paid**")
@@ -163,7 +157,7 @@ if target_year in data and data[target_year]:
                     st.success("Payment added!")
                     st.experimental_rerun()
 
-            # Update / Delete
+            # --- UPDATE / DELETE ---
             st.write("⚙️ Manage Member:")
             new_p = st.text_input("Phone", value=info['phone'], key=f"edit_p_{name}")
             new_g = st.selectbox("Gender", ["Male","Female"], index=0 if info.get('gender')=="Male" else 1, key=f"edit_g_{name}")
