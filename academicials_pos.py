@@ -33,17 +33,17 @@ st.markdown("""
 <style>
 .marquee {
 background-color: #1E3A8A;
-color: white;
-padding: 10px;
-font-weight: bold;
-border-radius: 5px;
-text-align: center;
+color:white;
+padding:10px;
+font-weight:bold;
+border-radius:5px;
+text-align:center;
 }
 .stButton>button {
-background-color: #F59E0B;
+background-color:#F59E0B;
 color: white;
-border-radius: 10px;
-border: none;
+border-radius:10px;
+border:none;
 }
 </style>
 <div class="marquee">
