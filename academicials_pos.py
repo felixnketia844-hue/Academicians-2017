@@ -8,93 +8,117 @@ import json
 import os
 from datetime import datetime
 
-# --- DATABASE FUNCTIONS ---
+# --- DATABASE ---
 def load_data():
     if not os.path.exists('members_data.json'):
-        with open('members_data.json', 'w') as f: json.dump({}, f)
+        with open('members_data.json', 'w') as f: 
+            json.dump({"years": ["2024", "2025", "2026", "2027"], "data": {}}, f)
     with open('members_data.json', 'r') as f: return json.load(f)
 
 def save_data(data):
     with open('members_data.json', 'w') as f: json.dump(data, f, indent=4)
 
-# --- PAGE CONFIG ---
+# --- CONFIG & DESIGN ---
 st.set_page_config(page_title="Academicians 2017", layout="wide")
 
-# Safe Styling (No Indent Errors)
-st.markdown('<div style="background-color:#1E3A8A;color:white;padding:15px;text-align:center;border-radius:10px;font-weight:bold;">✨ ACADEMICIANS 2017 OFFICIAL LEDGER ✨</div>', unsafe_allow_html=True)
+# This is the "Safe" Marquee and Button styling
+st.markdown("""<style>
+.marquee { background-color: #1E3A8A; color: white; padding: 15px; text-align: center; border-radius: 10px; font-weight: bold; }
+div.stButton > button:first-child { background-color: #F59E0B; color: white; border-radius: 20px; font-weight: bold; }
+</style>
+<div class="marquee">✨ WELCOME TO THE OFFICIAL ACADEMICIANS 2017 LEDGER PORTAL ✨</div>""", unsafe_allow_html=True)
 
-data = load_data()
+db = load_data()
 
-# --- SIDEBAR: INSERT DATA ---
-st.sidebar.header("📥 Data Entry")
-target_year = st.sidebar.selectbox("Select Year", [str(y) for y in range(2024, 2030)])
+# --- SIDEBAR ---
+st.sidebar.header("📅 Settings & Entry")
+
+# 1. Year Manager
+new_year = st.sidebar.text_input("Add New Year")
+if st.sidebar.button("Add Year"):
+    if new_year and new_year not in db["years"]:
+        db["years"].append(new_year)
+        db["years"].sort()
+        save_data(db)
+        st.rerun()
+
+target_year = st.sidebar.selectbox("Select Active Year", db["years"])
 target_month = st.sidebar.selectbox("Select Month", ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"])
 
-with st.sidebar.expander("➕ Add New Member"):
-    new_name = st.text_input("Full Name")
-    new_phone = st.text_input("Phone")
+# 2. Add Member with Gender
+with st.sidebar.expander("➕ Register New Member"):
+    n_name = st.text_input("Name")
+    n_phone = st.text_input("Phone")
+    n_gender = st.radio("Gender", ["Male", "Female"], horizontal=True)
     if st.button("Save Member"):
-        if target_year not in data: data[target_year] = {}
-        if new_name:
-            data[target_year][new_name] = {"phone": new_phone, "payments": []}
-            save_data(data)
-            st.success("Added!")
+        if target_year not in db["data"]: db["data"][target_year] = {}
+        if n_name:
+            db["data"][target_year][n_name] = {"phone": n_phone, "gender": n_gender, "payments": []}
+            save_data(db)
+            st.success(f"{n_name} added!")
             st.rerun()
 
-# --- MAIN INTERFACE ---
+if st.sidebar.button("Logout"):
+    st.session_state.clear()
+    st.rerun()
+
+# --- MAIN PAGE ---
 st.title(f"📊 Ledger: {target_month} {target_year}")
 
-if target_year in data and data[target_year]:
-    # Search and Stats
-    search = st.text_input("🔍 Search Member Name")
-    members = data[target_year]
+if target_year in db["data"] and db["data"][target_year]:
+    search = st.text_input("🔍 Search Name or Gender")
+    members = db["data"][target_year]
     
-    # Review Summary
-    total_collected = sum(sum(p['amount'] for p in info['payments']) for info in members.values())
-    st.info(f"💰 **Total Review for {target_year}:** GHS {total_collected:.2f}")
-
-    # Header
-    col1, col2, col3, col4 = st.columns([2, 1, 1, 1])
-    col1.write("**Member Name**")
-    col2.write("**Total Paid**")
-    col3.write("**Pay GHS 50**")
-    col4.write("**Manage**")
+    # Table Header
+    c1, c2, c3, c4 = st.columns([2, 1, 1, 1])
+    c1.markdown("**Member & Gender**")
+    c2.markdown("**Total Paid**")
+    c3.markdown("**Pay 50**")
+    c4.markdown("**Update/Delete**")
     st.divider()
 
     for name in list(members.keys()):
-        if search.lower() in name.lower():
-            info = members[name]
+        info = members[name]
+        icon = "👨" if info.get('gender') == "Male" else "👩"
+        
+        if search.lower() in name.lower() or search.lower() in info.get('gender', '').lower():
             paid = sum(p['amount'] for p in info['payments'])
+            col1, col2, col3, col4 = st.columns([2, 1, 1, 1])
             
-            c1, c2, c3, c4 = st.columns([2, 1, 1, 1])
-            c1.write(f"{name} \n ({info['phone']})")
-            c2.write(f"GHS {paid:.2f}")
+            col1.write(f"{icon} **{name}**\n({info['phone']})")
+            col2.write(f"GHS {paid:.2f}")
             
-            # Update/Pay
-            if c3.button("💳 Pay", key=f"pay_{name}"):
+            if col3.button("💳 Pay", key=f"p_{name}"):
                 info['payments'].append({"amount": 50, "month": target_month, "date": str(datetime.now())})
-                save_data(data)
+                save_data(db)
                 st.balloons()
                 st.rerun()
 
-            # Edit/Delete Preview
-            with c4.popover("⚙️"):
-                new_p = st.text_input("Edit Phone", value=info['phone'], key=f"edit_{name}")
-                if st.button("Update", key=f"up_{name}"):
-                    info['phone'] = new_p
-                    save_data(data)
+            # UPDATE & DELETE POP-OVER
+            with col4.popover("⚙️ Manage"):
+                st.write("### Edit Details")
+                u_phone = st.text_input("New Phone", value=info['phone'], key=f"up_{name}")
+                u_gen = st.radio("New Gender", ["Male", "Female"], index=0 if info.get('gender')=="Male" else 1, key=f"ug_{name}")
+                
+                if st.button("Update Info", key=f"btn_u_{name}"):
+                    info['phone'] = u_phone
+                    info['gender'] = u_gen
+                    save_data(db)
+                    st.success("Updated!")
                     st.rerun()
-                if st.button("🗑️ Delete", key=f"del_{name}"):
-                    del data[target_year][name]
-                    save_data(data)
+                
+                st.divider()
+                if st.button("🗑️ Delete Member", key=f"btn_d_{name}"):
+                    del db["data"][target_year][name]
+                    save_data(db)
                     st.rerun()
 else:
-    st.warning(f"No records found for {target_year}. Please add a member in the sidebar.")
+    st.info("No members found. Use the sidebar to add your first member!")
 
-# --- WHATSAPP REPORT ---
-if st.button("📱 Review & Copy WhatsApp Report"):
+# WhatsApp Report
+if st.button("📱 Generate WhatsApp Report"):
     report = f"*ACADEMICIANS 2017 - {target_month} {target_year}*\n"
-    for n, i in data.get(target_year, {}).items():
+    for n, i in db["data"].get(target_year, {}).items():
         p = sum(pm['amount'] for pm in i['payments'])
         report += f"• {n}: GHS {p}\n"
-    st.text_area("Report Preview:", value=report)
+    st.text_area("Copy this:", value=report)
