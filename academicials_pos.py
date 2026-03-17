@@ -20,11 +20,11 @@ def save_data(data):
     with open('members_data.json', 'w') as f:
         json.dump(data, f, indent=4)
 
-# --- SESSION STATE INIT ---
+# --- SESSION STATE ---
 if 'logged_in' not in st.session_state:
     st.session_state.logged_in = False
 
-# --- LOGIN FUNCTIONS ---
+# --- LOGIN / LOGOUT FUNCTIONS ---
 def login():
     st.session_state.logged_in = True
     st.experimental_rerun()
@@ -38,8 +38,8 @@ st.set_page_config(page_title="Academicians 2017", layout="wide")
 
 # --- LOGIN SCREEN ---
 if not st.session_state.logged_in:
-    st.title("🔒 Login")
-    if st.button("Login to Ledger"):
+    st.title("🔒 Click Login to Enter")
+    if st.button("Login", key="login_btn"):
         login()
     st.stop()
 
@@ -90,7 +90,7 @@ data = load_data()
 
 # --- SIDEBAR ---
 st.sidebar.header("🚪 Session")
-if st.sidebar.button("Logout"):
+if st.sidebar.button("Logout", key="logout_btn"):
     logout()
 
 st.sidebar.divider()
@@ -104,10 +104,10 @@ target_month = st.sidebar.selectbox(
 
 # --- ADD NEW MEMBER ---
 with st.sidebar.expander("➕ Add New Member"):
-    new_name = st.text_input("Full Name")
-    new_phone = st.text_input("Phone")
-    new_gender = st.radio("Gender", ["Male", "Female"], horizontal=True)
-    if st.button("Save Member", key="save_member"):
+    new_name = st.text_input("Full Name", key="new_name")
+    new_phone = st.text_input("Phone", key="new_phone")
+    new_gender = st.radio("Gender", ["Male", "Female"], horizontal=True, key="new_gender")
+    if st.button("Save Member", key="save_member_btn"):
         if target_year not in data:
             data[target_year] = {}
         if new_name.strip():
@@ -122,7 +122,7 @@ with st.sidebar.expander("➕ Add New Member"):
 st.title(f"📊 Ledger: {target_month} {target_year}")
 
 if target_year in data and data[target_year]:
-    search = st.text_input("🔍 Search Name or Gender").strip().lower()
+    search = st.text_input("🔍 Search Name or Gender", key="search_input").strip().lower()
     members = data[target_year]
 
     # Stats
