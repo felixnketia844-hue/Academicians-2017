@@ -31,44 +31,46 @@ def logout():
 # --- PAGE CONFIG ---
 st.set_page_config(page_title="Academicians 2017", layout="wide")
 
-# --- MARQUEE HEADER ---
+# --- MARQUEE HEADER + SCROLLING TICKER ---
 st.markdown("""
 <style>
+@keyframes scroll-left {
+  0% { transform: translateX(100%); }
+  100% { transform: translateX(-100%); }
+}
 .marquee {
-    width: 100%;
-    overflow: hidden;
-    white-space: nowrap;
+  overflow: hidden;
+  white-space: nowrap;
+  box-sizing: border-box;
+  background-color:#1E3A8A;
+  border-radius:10px;
+  padding: 15px;
+  color:white;
+  font-weight:bold;
+  font-size:22px;
 }
 .marquee span {
-    display: inline-block;
-    padding-left: 100%;
-    animation: marquee 10s linear infinite;
-    font-weight: bold;
-    font-size: 22px;
-    color: white;
+  display: inline-block;
+  padding-left: 100%;
+  animation: scroll-left 15s linear infinite;
 }
 .submarquee {
-    width: 100%;
-    overflow: hidden;
-    white-space: nowrap;
+  overflow: hidden;
+  white-space: nowrap;
+  box-sizing: border-box;
+  font-size:16px;
+  color:#f0f0f0;
+  margin-top:5px;
 }
 .submarquee span {
-    display: inline-block;
-    padding-left: 100%;
-    animation: marquee 15s linear infinite;
-    font-size: 16px;
-    color: #f0f0f0;
+  display:inline-block;
+  padding-left:100%;
+  animation: scroll-left 20s linear infinite;
 }
 </style>
 
-<div style="background-color:#1E3A8A;padding:15px;border-radius:10px;text-align:center;">
-    <div class="marquee">
-        <span>✨ ACADEMICIANS 2017 OFFICIAL LEDGER ✨</span>
-    </div>
-    <div class="submarquee">
-        <span>Manage your members | Track payments | Update or Delete records | Keep your data safe</span>
-    </div>
-</div>
+<div class="marquee"><span>✨ ACADEMICIANS 2017 OFFICIAL LEDGER ✨</span></div>
+<div class="submarquee"><span>Manage members | Track payments | Update or Delete | Safe & secure ledger</span></div>
 """, unsafe_allow_html=True)
 
 # --- LOGIN CHECK ---
@@ -95,17 +97,20 @@ target_month = st.sidebar.selectbox(
      "July","August","September","October","November","December"]
 )
 
+# --- ADD NEW MEMBER ---
 with st.sidebar.expander("➕ Add New Member"):
     new_name = st.text_input("Full Name")
     new_phone = st.text_input("Phone")
     new_gender = st.radio("Gender", ["Male", "Female"], horizontal=True)
     if st.button("Save Member"):
         if target_year not in data: data[target_year] = {}
-        if new_name:
+        if new_name.strip():
             data[target_year][new_name] = {"phone": new_phone, "gender": new_gender, "payments": []}
             save_data(data)
             st.success("Member Saved!")
             st.rerun()
+        else:
+            st.error("Name is required!")
 
 # --- MAIN INTERFACE ---
 st.title(f"📊 Ledger: {target_month} {target_year}")
@@ -114,13 +119,13 @@ if target_year in data and data[target_year]:
     search = st.text_input("🔍 Search Name or Gender").strip().lower()
     members = data[target_year]
 
-    # Quick Review Stats
-    males = len([n for n, i in members.items() if i.get('gender') == "Male"])
-    females = len([n for n, i in members.items() if i.get('gender') == "Female"])
+    # Quick Stats
+    males = len([n for n,i in members.items() if i.get('gender')=="Male"])
+    females = len([n for n,i in members.items() if i.get('gender')=="Female"])
     st.write(f"👥 **Stats:** {males} Males | {females} Females")
 
-    # Header
-    col1, col2, col3, col4 = st.columns([2, 1, 1, 1])
+    # Table header
+    col1, col2, col3, col4 = st.columns([2,1,1,1])
     col1.write("**Member Detail**")
     col2.write("**Total Paid**")
     col3.write("**Action**")
@@ -129,24 +134,26 @@ if target_year in data and data[target_year]:
 
     for name in list(members.keys()):
         info = members[name]
-        gender_icon = "👨" if info.get('gender') == "Male" else "👩"
+        gender_icon = "👨" if info.get('gender')=="Male" else "👩"
 
+        # Search filter
         if not search or search in name.lower() or search in info.get('gender','').lower():
+
             paid = sum(p['amount'] for p in info['payments'])
-            c1, c2, c3, c4 = st.columns([2,1,1,1])
+            c1,c2,c3,c4 = st.columns([2,1,1,1])
             c1.write(f"{gender_icon} **{name}**\n({info['phone']})")
             c2.write(f"GHS {paid:.2f}")
 
-            # Payment
+            # Custom payment
             amount = c3.number_input("Amount", min_value=0.0, key=f"amt_{name}")
             if c3.button("💳 Pay", key=f"pay_{name}"):
-                if amount > 0:
-                    info['payments'].append({"amount": amount, "month": target_month, "date": str(datetime.now())})
+                if amount>0:
+                    info['payments'].append({"amount":amount,"month":target_month,"date":str(datetime.now())})
                     save_data(data)
-                    st.balloons()
+                    st.success("Payment added!")
                     st.rerun()
 
-            # Update / Delete inline
+            # --- UPDATE / DELETE ---
             st.write("⚙️ Manage Member:")
             new_p = st.text_input("Phone", value=info['phone'], key=f"edit_p_{name}")
             new_g = st.selectbox("Gender", ["Male","Female"], index=0 if info.get('gender')=="Male" else 1, key=f"edit_g_{name}")
@@ -154,11 +161,13 @@ if target_year in data and data[target_year]:
                 info['phone'] = new_p
                 info['gender'] = new_g
                 save_data(data)
+                st.success("Updated!")
                 st.rerun()
             confirm = st.checkbox("Confirm Delete", key=f"confirm_{name}")
             if confirm and st.button("🗑️ Delete Member", key=f"del_{name}"):
                 del data[target_year][name]
                 save_data(data)
+                st.warning("Deleted!")
                 st.rerun()
 else:
     st.warning("No records for this year yet.")
