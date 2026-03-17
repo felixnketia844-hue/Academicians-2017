@@ -26,21 +26,21 @@ st.set_page_config(page_title="Academicians 2017", layout="wide")
 
 st.markdown("""
 <style>
-.marquee {
-background-color: #1E3A8A;
+.marquee{
+background-color:#1E3A8A;
 color: white;
-padding: 15px;
-font-weight: bold;
-border-radius: 10px;
-text-align: center;
-font-size: 20px;
+padding:15px;
+font-weight:bold;
+border-radius:10px;
+text-align:center;
+font-size:20px;
 }
-.stButton>button {
+.stButton>button{
 background-color: #F59E0B;
 color: white;
-border-radius: 10px;
-font-weight: bold;
-width: 100%;
+border-radius:10px;
+font-weight:bold;
+width:100%;
 }
 </style>
 <div class="marquee">
