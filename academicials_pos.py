@@ -2,7 +2,7 @@
 ""
 #Created on Mon Mar 16 18:31:12 2026
 #@author: felix
-Iimport streamlit as st
+import streamlit as st
 import json
 import os
 from datetime import datetime
