@@ -25,31 +25,37 @@ def save_data(data):
 st.set_page_config(page_title="Academicians 2017", layout="wide")
 
 # This is your "Marquee" and Custom Colors
+st.markdown("""
+    <style>
+    .marquee {
+        background-color:#1E3A8A;
+        color: white;
+        padding:10px;
+        font-weight:bold;
+        border-radius:5px;
+        text-align:center;
+    }
+    .stButton>button {
+        background-color:#F59E0B;
+        color: white;
+        border-radius:10px;
+        border:none;
+    }
+    .stButton>button:hover {
+        background-color:#D97706;
+        color:white;
+    }
+    </style>
+    <div class="marquee">
+        ✨ WELCOME TO ACADEMICIANS 2017 OFFICIAL LEDGER PORTAL ✨
+    </div>
+    """, unsafe_allow_html=True)
 
 st.title("🎓 ACADEMICIANS 2017")
 st.write("---")
+
 data = load_data()
-st.markdown("""
-<style>
-.marquee {
-background-color: #1E3A8A;
-color:white;
-padding:10px;
-font-weight:bold;
-border-radius:5px;
-text-align:center;
-}
-.stButton>button {
-background-color:#F59E0B;
-color: white;
-border-radius:10px;
-border:none;
-}
-</style>
-<div class="marquee">
-✨ WELCOME TO ACADEMICIANS 2017 OFFICIAL LEDGER PORTAL ✨
-</div>
-""", unsafe_allow_html=True)
+
 # --- SIDEBAR: ADD MEMBER ---
 st.sidebar.markdown("### 👤 Add New Member")
 new_name = st.sidebar.text_input("Full Name")
