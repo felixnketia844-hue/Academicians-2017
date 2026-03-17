@@ -11,90 +11,153 @@ from datetime import datetime
 # --- DATABASE FUNCTIONS ---
 def load_data():
     if not os.path.exists('members_data.json'):
-        with open('members_data.json', 'w') as f: json.dump({}, f)
-    with open('members_data.json', 'r') as f: 
-        try:
-            return json.load(f)
-        except:
-            return {}
+        with open('members_data.json', 'w') as f:
+            json.dump({}, f)
+    with open('members_data.json', 'r') as f:
+        return json.load(f)
 
 def save_data(data):
-    with open('members_data.json', 'w') as f: json.dump(data, f, indent=4)
+    with open('members_data.json', 'w') as f:
+        json.dump(data, f, indent=4)
+
+# --- LOGIN SESSION ---
+if 'logged_in' not in st.session_state:
+    st.session_state.logged_in = True
+
+def logout():
+    st.session_state.logged_in = False
+    st.rerun()
 
 # --- PAGE CONFIG ---
 st.set_page_config(page_title="Academicians 2017", layout="wide")
-st.markdown('<h1 style="text-align:center; color:#1E3A8A;">✨ ACADEMICIANS 2017 LEDGER ✨</h1>', unsafe_allow_html=True)
+
+st.markdown(
+    '<div style="background-color:#1E3A8A;color:white;padding:15px;text-align:center;border-radius:10px;font-weight:bold;">✨ ACADEMICIANS 2017 OFFICIAL LEDGER ✨</div>',
+    unsafe_allow_html=True
+)
+
+if not st.session_state.logged_in:
+    st.info("You have logged out.")
+    if st.button("Log Back In"):
+        st.session_state.logged_in = True
+        st.rerun()
+    st.stop()
 
 data = load_data()
 
 # --- SIDEBAR ---
-st.sidebar.header("Settings")
-target_year = st.sidebar.selectbox("Year", [str(y) for y in range(2024, 2031)])
-target_month = st.sidebar.selectbox("Month", ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"])
+st.sidebar.header("🚪 Session")
+if st.sidebar.button("Logout of System"):
+    logout()
 
+st.sidebar.divider()
+st.sidebar.header("📥 Data Entry")
+
+target_year = st.sidebar.selectbox("Year", [str(y) for y in range(2024, 2031)])
+target_month = st.sidebar.selectbox(
+    "Month",
+    ["January","February","March","April","May","June",
+     "July","August","September","October","November","December"]
+)
+
+# --- ADD MEMBER ---
 with st.sidebar.expander("➕ Add New Member"):
     new_name = st.text_input("Full Name")
     new_phone = st.text_input("Phone")
-    new_gender = st.selectbox("Gender", ["Male", "Female"])
-    if st.button("Save New Member"):
-        if target_year not in data: data[target_year] = {}
-        if new_name:
-            data[target_year][new_name] = {"phone": new_phone, "gender": new_gender, "payments": []}
+    new_gender = st.radio("Gender", ["Male", "Female"], horizontal=True)
+
+    if st.button("Save Member"):
+        if target_year not in data:
+            data[target_year] = {}
+
+        if new_name.strip() != "":
+            data[target_year][new_name] = {
+                "phone": new_phone,
+                "gender": new_gender,
+                "payments": []
+            }
             save_data(data)
+            st.success("Member Saved!")
             st.rerun()
 
-# --- MAIN INTERFACE ---
+# --- MAIN ---
+st.title(f"📊 Ledger: {target_month} {target_year}")
+
+# --- SEARCH ---
+search = st.text_input("🔍 Search Name or Gender", "")
+
 if target_year in data and data[target_year]:
-    # 1. THE SEARCH BAR
-    search = st.text_input("🔍 Search by Name or Gender", placeholder="Type name here...")
-    
-    st.divider()
-    
-    # 2. THE LIST
     members = data[target_year]
-    for name in list(members.keys()):
-        info = members[name]
-        
-        # Search Filter Logic
-        if search.lower() in name.lower() or search.lower() in info.get('gender','').lower():
-            
-            # Create 4 columns for: Info, Payment, Update, Delete
-            col1, col2, col3, col4 = st.columns([2, 2, 2, 1])
-            
-            # COLUMN 1: Basic Info
-            with col1:
-                st.markdown(f"**{name}**")
-                st.caption(f"{info.get('gender')} | {info.get('phone')}")
-            
-            # COLUMN 2: Amount Paid & Payment Input
-            with col2:
-                total_paid = sum(p['amount'] for p in info['payments'] if p['month'] == target_month)
-                amt = st.number_input(f"GHS Amount", min_value=0.0, key=f"pay_{name}")
-                if st.button(f"Confirm Payment", key=f"btn_{name}"):
-                    if amt > 0:
-                        info['payments'].append({"amount": amt, "month": target_month, "date": str(datetime.now())})
-                        save_data(data)
-                        st.success(f"Paid {amt}")
-                        st.rerun()
-                st.write(f"Total Paid: **GHS {total_paid}**")
 
-            # COLUMN 3: Update Details
-            with col3:
-                new_p = st.text_input("Edit Phone", value=info['phone'], key=f"p_{name}")
-                if st.button("Update Info", key=f"upd_{name}"):
-                    info['phone'] = new_p
+    # --- STATS ---
+    males = len([i for i in members.values() if i.get('gender') == "Male"])
+    females = len([i for i in members.values() if i.get('gender') == "Female"])
+    st.write(f"👥 **Stats:** {males} Males | {females} Females")
+
+    st.divider()
+
+    # --- LOOP MEMBERS ---
+    for idx, (name, info) in enumerate(members.items()):
+
+        # --- SEARCH FILTER ---
+        if search:
+            if search.lower() not in name.lower() and search.lower() not in info.get('gender','').lower():
+                continue
+
+        gender_icon = "👨" if info.get('gender') == "Male" else "👩"
+        total_paid = sum(p['amount'] for p in info.get('payments', []))
+
+        st.write(f"### {gender_icon} {name}")
+        st.write(f"📞 {info['phone']} | 💰 Total: GHS {total_paid:.2f}")
+
+        # --- FORM (VERY IMPORTANT) ---
+        with st.form(key=f"form_{idx}"):
+
+            col1, col2, col3 = st.columns(3)
+
+            # AMOUNT
+            amount = col1.number_input("Enter Amount", min_value=0.0, key=f"amt_{idx}")
+
+            # UPDATE
+            new_phone = col2.text_input("Phone", value=info['phone'], key=f"phone_{idx}")
+            new_gender = col3.selectbox(
+                "Gender",
+                ["Male", "Female"],
+                index=0 if info.get('gender') == "Male" else 1,
+                key=f"gender_{idx}"
+            )
+
+            # BUTTONS
+            pay_btn = st.form_submit_button("💳 Pay")
+            update_btn = st.form_submit_button("Update")
+            delete_btn = st.form_submit_button("🗑️ Delete")
+
+            # --- ACTIONS ---
+            if pay_btn:
+                if amount > 0:
+                    info['payments'].append({
+                        "amount": amount,
+                        "month": target_month,
+                        "date": str(datetime.now())
+                    })
                     save_data(data)
-                    st.toast("Updated!")
+                    st.success(f"{name} paid GHS {amount}")
                     st.rerun()
 
-            # COLUMN 4: Delete
-            with col4:
-                st.write("") # spacing
-                if st.button("🗑️ Delete", key=f"del_{name}"):
-                    del data[target_year][name]
-                    save_data(data)
-                    st.rerun()
-            
-            st.divider()
+            if update_btn:
+                info['phone'] = new_phone
+                info['gender'] = new_gender
+                save_data(data)
+                st.success("Updated!")
+                st.rerun()
+
+            if delete_btn:
+                del data[target_year][name]
+                save_data(data)
+                st.warning(f"{name} deleted")
+                st.rerun()
+
+        st.divider()
+
 else:
-    st.info("No members found for this year. Use the sidebar to add someone.")
+    st.warning("No records for this year yet.")
