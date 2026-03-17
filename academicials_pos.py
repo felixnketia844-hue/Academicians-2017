@@ -17,9 +17,9 @@ def load_data():
 def save_data(data):
     with open('members_data.json', 'w') as f: json.dump(data, f, indent=4)
 
-# --- LOGIN/LOGOUT LOGIC ---
+# --- LOGIN/LOGOUT ---
 if 'logged_in' not in st.session_state:
-    st.session_state.logged_in = True  # Set to False if you want a password screen later
+    st.session_state.logged_in = True  # already logged in
 
 def logout():
     st.session_state.logged_in = False
@@ -28,7 +28,6 @@ def logout():
 # --- PAGE CONFIG ---
 st.set_page_config(page_title="Academicians 2017", layout="wide")
 
-# Safe Styling 
 st.markdown('<div style="background-color:#1E3A8A;color:white;padding:15px;text-align:center;border-radius:10px;font-weight:bold;">✨ ACADEMICIANS 2017 OFFICIAL LEDGER ✨</div>', unsafe_allow_html=True)
 
 if not st.session_state.logged_in:
@@ -69,13 +68,13 @@ if target_year in data and data[target_year]:
     search = st.text_input("🔍 Search Name or Gender")
     members = data[target_year]
     
-    # Quick Review Stats
+    # Quick Stats
     males = len([n for n, i in members.items() if i.get('gender') == "Male"])
     females = len([n for n, i in members.items() if i.get('gender') == "Female"])
     st.write(f"👥 **Stats:** {males} Males | {females} Females")
 
     # Header
-    col1, col2, col3, col4 = st.columns([2, 1, 1, 1])
+    col1, col2, col3, col4 = st.columns([2,1,1,1])
     col1.write("**Member Detail**")
     col2.write("**Total Paid**")
     col3.write("**Action**")
@@ -85,36 +84,34 @@ if target_year in data and data[target_year]:
     for idx, name in enumerate(list(members.keys())):
         info = members[name]
         gender_icon = "👨" if info.get('gender') == "Male" else "👩"
-        
-        # Filter logic
-        if search.lower() in name.lower() or search.lower() in info.get('gender', '').lower():
+
+        if search.lower() in name.lower() or search.lower() in info.get('gender','').lower():
             paid = sum(p['amount'] for p in info['payments'])
-            
-            c1, c2, c3, c4 = st.columns([2, 1, 1, 1])
+
+            c1, c2, c3, c4 = st.columns([2,1,1,1])
             c1.write(f"{gender_icon} **{name}**\n({info['phone']})")
             c2.write(f"GHS {paid:.2f}")
-            
-            # --- CUSTOM PAYMENT ---
+
+            # --- SIMPLE AMOUNT INPUT ---
             amount = c3.number_input("Amount", min_value=0.0, key=f"amt_{idx}")
             if c3.button("💳 Pay", key=f"pay_{idx}"):
                 if amount > 0:
                     info['payments'].append({"amount": amount, "month": target_month, "date": str(datetime.now())})
                     save_data(data)
-                    st.balloons()
+                    st.success(f"GHS {amount} paid!")
                     st.rerun()
 
-            with c4.popover("⚙️"):
-                st.write("Edit Info")
-                new_p = st.text_input("Phone", value=info['phone'], key=f"edit_p_{idx}")
-                new_g = st.selectbox("Gender", ["Male", "Female"], index=0 if info.get('gender')=="Male" else 1, key=f"edit_g_{idx}")
-                if st.button("Update", key=f"up_{idx}"):
-                    info['phone'] = new_p
-                    info['gender'] = new_g
-                    save_data(data)
-                    st.rerun()
-                if st.button("🗑️ Delete Member", key=f"del_{idx}"):
-                    del data[target_year][name]
-                    save_data(data)
-                    st.rerun()
+            # --- EDIT / DELETE ---
+            new_p = st.text_input("Phone", value=info['phone'], key=f"edit_p_{idx}")
+            new_g = st.selectbox("Gender", ["Male", "Female"], index=0 if info.get('gender')=="Male" else 1, key=f"edit_g_{idx}")
+            if st.button("Update", key=f"up_{idx}"):
+                info['phone'] = new_p
+                info['gender'] = new_g
+                save_data(data)
+                st.rerun()
+            if st.button("🗑️ Delete Member", key=f"del_{idx}"):
+                del data[target_year][name]
+                save_data(data)
+                st.rerun()
 else:
     st.warning("No records for this year yet.")
